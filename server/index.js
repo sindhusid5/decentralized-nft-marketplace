@@ -1,51 +1,31 @@
-// const express = require('express');
-// const {Web3} = require('web3');
-// const app = express();
-// const port = 3000;
-
-// // Replace with your actual ABI and contract address
-// const NFTMarketplaceABI = require('../build/contracts/NFTMarketplace.json');  
-// const NFTMarketplaceAddress = '0x...'; // Replace with your deployed contract address
-
-// // Initialize Web3 with a provider
-// const web3 = new Web3('http://localhost:8545');
-// const NFTMarketplace = new web3.eth.Contract(NFTMarketplaceABI, NFTMarketplaceAddress);
-
-// app.get('/auctions', async (req, res) => {
-//     try {
-//         const auctions = await NFTMarketplace.methods.getAuctions().call();
-//         res.json(auctions); // Send JSON response
-//     } catch (error) {
-//         console.error('Error fetching auctions:', error);
-//         res.status(500).json({ error: 'Error fetching auctions' }); // Send JSON error response
-//     }
-// });
-
-// app.listen(port, () => {
-//     console.log(`Server listening at http://localhost:${port}`);
-// });
 const express = require("express");
 const Web3 = require("web3");
-const NFTMarketplace = require("../build/contracts/NFTMarketplace.json");
-
+const dotenv = require("dotenv");
+dotenv.config(); // Load environment variables from .env file
 const app = express();
-const web3 = new Web3("http://localhost:8545");
-const networkId = await web3.eth.net.getId();
-const deployedNetwork = NFTMarketplace.networks[networkId];
-const contract = new web3.eth.Contract(
-    NFTMarketplace.abi,
-    deployedNetwork && deployedNetwork.address
-);
+const port = 3000;
+
+const web3 = new Web3(process.env.ETH_NODE_URL); // Use environment variable for Ethereum node URL
+const marketplaceABI = require("./build/contracts/Marketplace.json").abi;
+const marketplaceAddress = process.env.MARKETPLACE_CONTRACT_ADDRESS; // Use environment variable for marketplace contract address
+
+const marketplaceContract = new web3.eth.Contract(marketplaceABI, marketplaceAddress);
 
 app.use(express.json());
 
-app.post("/mint", async (req, res) => {
-    const { tokenURI } = req.body;
-    const accounts = await web3.eth.getAccounts();
-    await contract.methods.mintNFT(tokenURI).send({ from: accounts[0] });
-    res.send("NFT minted successfully");
+app.post("/list-nft", async (req, res) => {
+    const { tokenAddress, tokenId, price } = req.body;
+    try {
+        const accounts = await web3.eth.getAccounts();
+        await marketplaceContract.methods.listNFT(tokenAddress, tokenId, price)
+            .send({ from: accounts[0] });
+        res.send("NFT listed successfully");
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Failed to list NFT");
+    }
 });
 
-app.listen(3000, () => {
-    console.log("Server running on port 3000");
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
 });
