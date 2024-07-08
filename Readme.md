@@ -22,17 +22,16 @@ This project is a fully decentralized NFT marketplace built on the Ethereum bloc
    cd frontend
    npm install 
    ```
-   
 
-2. Compile and migrate contracts:
+2. Start the local blockchain:
+   ```bash
+   ganache-cli
+   ```
+
+3. Compile and migrate contracts:
    ```bash
    truffle compile
    truffle migrate
-   ```
-
-3. Start the local blockchain:
-   ```bash
-   ganache-cli
    ```
 
 4. Start the backend server:
